@@ -1,0 +1,35 @@
+#!/bin/bash
+
+if [ "$EUID" -ne 0 ]
+  then echo "Please run with sudo"
+  exit
+fi
+
+mod() {
+    echo "Modding $1"
+    local iconPack="$1"
+    local chargedIcon="/usr/share/icons/$iconPack/symbolic/status/battery-level-100-charged-symbolic.svg"
+    local shutdownIcon="/usr/share/icons/$iconPack/symbolic/actions/system-shutdown-symbolic.svg"
+    cp -n "$chargedIcon" "$chargedIcon.bak" && cp "$shutdownIcon" "$chargedIcon"
+}
+
+unmod() {
+    echo "Un-Modding $1"
+    local iconPack="$1"
+    local chargedIcon="/usr/share/icons/$iconPack/symbolic/status/battery-level-100-charged-symbolic.svg"
+    cp "$chargedIcon.bak" "$chargedIcon" && rm "$chargedIcon.bak"
+}
+
+cd /usr/share/icons/
+packs=$(ls -d */ | sed 's#/#!#g' | tr -d '\n')
+echo $packs
+
+while [[ $option -ne 252 ]]; do
+    selection=$(yad --center --title="Mod Icon Pack" --separator="" --form --field="Select Icon Pack":CB $packs --button="Mod Icon Pack":100 --button="Reset Icon Pack":200)
+    option=$?
+    if [[ $option -eq 100 ]]; then
+        mod $selection
+    elif [[ $option -eq 200 ]]; then
+        unmod $selection
+    fi
+done
